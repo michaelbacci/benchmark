@@ -35,16 +35,27 @@ void BenchmarkReporter::ComputeStats(
   // can take this information from the first benchmark.
   std::size_t const run_iterations = reports.front().iterations;
 
+  double min_real_accumulated_time = std::numeric_limits<double>::max();
+  double max_real_accumulated_time = 0;
+
   // Populate the accumulators.
   for (Run const& run : reports) {
     CHECK_EQ(reports[0].benchmark_name, run.benchmark_name);
     CHECK_EQ(run_iterations, run.iterations);
+    auto real_accumulated_time = run.real_accumulated_time/run.iterations;
     real_accumulated_time_stat +=
-        Stat1_d(run.real_accumulated_time/run.iterations, run.iterations);
+        Stat1_d(real_accumulated_time, run.iterations);
     cpu_accumulated_time_stat +=
         Stat1_d(run.cpu_accumulated_time/run.iterations, run.iterations);
     items_per_second_stat += Stat1_d(run.items_per_second, run.iterations);
     bytes_per_second_stat += Stat1_d(run.bytes_per_second, run.iterations);
+
+    if (run.min_max_time_enabled) {
+      min_real_accumulated_time =
+          std::min(min_real_accumulated_time, real_accumulated_time);
+      max_real_accumulated_time =
+          std::max(max_real_accumulated_time, real_accumulated_time);
+    }
   }
 
   // Get the data from the accumulator to BenchmarkReporter::Run's.
@@ -56,7 +67,10 @@ void BenchmarkReporter::ComputeStats(
                                     run_iterations;
   mean_data->bytes_per_second = bytes_per_second_stat.Mean();
   mean_data->items_per_second = items_per_second_stat.Mean();
-
+  mean_data->min_time = min_real_accumulated_time;
+  mean_data->max_time = max_real_accumulated_time;
+  VLOG(3) << "M A A A A A A A A A A A A  A Amax accumulated ";// << max_real_accumulated_time;
+  exit(0);
   // Only add label to mean/stddev if it is same for all runs
   mean_data->report_label = reports[0].report_label;
   for (std::size_t i = 1; i < reports.size(); i++) {
@@ -75,6 +89,8 @@ void BenchmarkReporter::ComputeStats(
       cpu_accumulated_time_stat.StdDev();
   stddev_data->bytes_per_second = bytes_per_second_stat.StdDev();
   stddev_data->items_per_second = items_per_second_stat.StdDev();
+  stddev_data->min_time = min_real_accumulated_time;
+  stddev_data->max_time = max_real_accumulated_time;
 }
 
 void BenchmarkReporter::Finalize() {

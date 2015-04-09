@@ -45,11 +45,16 @@ bool ConsoleReporter::ReportContext(const Context& context) {
                "affected.\n";
 #endif
 
-  int output_width = fprintf(stdout, "%-*s %10s %10s %10s\n",
+  int output_width = fprintf(stdout, "%-*s %10s %10s %10s",
                              static_cast<int>(name_field_width_), "Benchmark",
                              "Time(ns)", "CPU(ns)", "Iterations");
-  std::cout << std::string(output_width - 1, '-') << "\n";
 
+  if (context.min_max_time_enabled)
+    output_width += fprintf(stdout, " %10s %10s", "Min(ns)" , "Max(ns)");
+
+  output_width += fprintf(stdout, "\n");
+
+  std::cout << std::string(output_width - 1, '-') << "\n";
   return true;
 }
 
@@ -67,7 +72,6 @@ void ConsoleReporter::ReportRuns(const std::vector<Run>& reports) {
     // We don't report aggregated data if there was a single run.
     return;
   }
-
   Run mean_data;
   Run stddev_data;
   BenchmarkReporter::ComputeStats(reports, &mean_data, &stddev_data);
@@ -106,6 +110,13 @@ void ConsoleReporter::PrintRunData(const Run& result) {
                     (static_cast<double>(result.iterations)));
   }
   ColorPrintf(COLOR_CYAN, "%10lld", result.iterations);
+
+  if(result.min_max_time_enabled) {
+    ColorPrintf(COLOR_CYAN, " %10.0f %10.0f",
+                result.min_time * multiplier,
+                result.max_time * multiplier);
+  }
+
   ColorPrintf(COLOR_DEFAULT, "%*s %*s %s\n",
               13, rate.c_str(),
               18, items.c_str(),

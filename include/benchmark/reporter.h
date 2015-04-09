@@ -33,6 +33,7 @@ class BenchmarkReporter {
     int num_cpus;
     double mhz_per_cpu;
     bool cpu_scaling_enabled;
+    bool min_max_time_enabled;
 
     // The number of chars in the longest benchmark name.
     size_t name_field_width;
@@ -59,6 +60,10 @@ class BenchmarkReporter {
 
     // This is set to 0.0 if memory tracing is not enabled.
     double max_heapbytes_used;
+
+    bool min_max_time_enabled;
+    double min_time;
+    double max_time;
   };
 
   // Called once for every suite of benchmarks run.

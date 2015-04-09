@@ -71,6 +71,8 @@ DEFINE_bool(color_print, true, "Enables colorized logging.");
 
 DEFINE_int32(v, 0, "The level of verbose logging to output");
 
+DEFINE_bool(benchmark_min_max, false,
+            "Enable the min and max time score for the set of benchmarks.");
 
 namespace benchmark {
 
@@ -713,6 +715,7 @@ void RunBenchmark(const benchmark::internal::Benchmark::Instance& b,
         report.cpu_accumulated_time = cpu_accumulated_time;
         report.bytes_per_second = bytes_per_second;
         report.items_per_second = items_per_second;
+        report.min_max_time_enabled = FLAGS_benchmark_min_max;
         reports.push_back(report);
         break;
       }
@@ -812,6 +815,7 @@ void RunMatchingBenchmarks(const std::string& spec,
 
   context.cpu_scaling_enabled = CpuScalingEnabled();
   context.name_field_width = name_field_width;
+  context.min_max_time_enabled = FLAGS_benchmark_min_max;
 
   if (reporter->ReportContext(context)) {
     for (const auto& benchmark : benchmarks) {
@@ -867,6 +871,7 @@ void PrintUsageAndExit() {
           " [--benchmark_list_tests={true|false}]\n"
           "          [--benchmark_filter=<regex>]\n"
           "          [--benchmark_min_time=<min_time>]\n"
+          "          [--benchmark_min_max={true|false}]\n"
           "          [--benchmark_repetitions=<num_repetitions>]\n"
           "          [--benchmark_format=<tabular|json|csv>]\n"
           "          [--color_print={true|false}]\n"
@@ -884,6 +889,8 @@ void ParseCommandLineFlags(int* argc, const char** argv) {
                         &FLAGS_benchmark_filter) ||
         ParseDoubleFlag(argv[i], "benchmark_min_time",
                         &FLAGS_benchmark_min_time) ||
+        ParseBoolFlag(argv[i], "benchmark_min_max",
+                        &FLAGS_benchmark_min_max) ||
         ParseInt32Flag(argv[i], "benchmark_repetitions",
                        &FLAGS_benchmark_repetitions) ||
         ParseStringFlag(argv[i], "benchmark_format",
